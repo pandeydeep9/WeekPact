@@ -84,9 +84,40 @@ refresh() {
     if [[ "$active" == 0 ]]; then rm -f "$expires"; fi
 }
 
+show_status() {
+    local now expiry selected policy remaining
+    if [[ ! -f "$expires" ]]; then
+        echo 'No WeekPact trial is active.'
+        return
+    fi
+    policy=$(cat "$expires")
+    read -r expiry selected <<< "$policy"
+    selected=${selected:-example}
+    if [[ ! "$expiry" =~ ^[0-9]+$ ]]; then
+        echo 'WeekPact trial state is invalid; inspect the installed rule.' >&2
+        return 1
+    fi
+    now=$(date +%s)
+    if (( now >= expiry )); then
+        refresh
+        echo 'The trial expired and its hosts rule was removed.'
+        return
+    fi
+    remaining=$((expiry - now))
+    if grep -Fqx "$begin" "$hosts"; then
+        echo "$selected trial: ${remaining}s remaining; hosts rule installed. Browser access needs a separate check."
+    else
+        echo "$selected trial: ${remaining}s remaining, but the hosts rule is missing." >&2
+        return 1
+    fi
+}
+
 case "${1:-}" in
     refresh)
         refresh
+        ;;
+    status)
+        show_status
         ;;
     trial)
         if [[ ! -f "$hosts" ]]; then echo '/etc/hosts was not found.' >&2; exit 1; fi
@@ -97,7 +128,8 @@ case "${1:-}" in
         esac
         if [[ -f "$expires" ]]; then refresh; fi
         if [[ -f "$expires" ]]; then
-            echo 'A WeekPact test is already pending; wait for it to end.' >&2
+            show_status
+            echo 'The running test cannot be restarted. Wait for its timer to end.' >&2
             exit 1
         fi
         echo "WeekPact will block $selected for two minutes using /etc/hosts."
@@ -135,9 +167,10 @@ PLIST
         mv -f "$policy_file" "$expires"
         refresh
         echo "Test $selected in a fresh Safari or Chrome tab. It should open again in two minutes."
+        show_status
         ;;
     *)
-        echo 'Usage: sudo bash scripts/test-weekpact-block.sh trial [youtube|example]' >&2
+        echo 'Usage: sudo bash scripts/test-weekpact-block.sh trial [youtube|example] | status' >&2
         exit 2
         ;;
 esac
