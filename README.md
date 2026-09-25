@@ -22,6 +22,6 @@ This is a source-run macOS prototype, not a signed one-click installer. Enforced
 
 ### Prototype screenshot
 
-The screen supplied during testing, before the trial status and layout update in this PR:
+The screen supplied during testing, before the September 2026 trial status and layout update:
 
 ![WeekPact prototype on macOS before the UI update](docs/prototype-before.svg)
