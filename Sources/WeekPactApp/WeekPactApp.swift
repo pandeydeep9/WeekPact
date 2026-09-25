@@ -118,17 +118,33 @@ struct PlannerView: View {
                 Text("WeekPact").font(.largeTitle.bold())
                 Text("Planning prototype · Browser trial available below · No locked enforcement yet")
                     .foregroundStyle(.orange)
-                GroupBox("Try a five-minute YouTube limit today") {
+                GroupBox("YouTube five-minute trial · prototype") {
                     VStack(alignment: .leading, spacing: 10) {
                         TextField("Trial instruction", text: $trial.instruction)
                         HStack {
                             Button("Start trial") { trial.start() }
                                 .buttonStyle(.borderedProminent)
-                            Text("\(Int(trial.remainingSeconds.rounded(.up))) seconds remaining today")
-                                .monospacedDigit()
+                                .disabled(trial.isRunning)
+                            if trial.isRunning {
+                                Button("End test now") { trial.end() }
+                            }
+                        }
+                        if trial.isRunning {
+                            TimelineView(.periodic(from: .now, by: 1)) { timeline in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("YouTube today: \(Int(trial.remainingSeconds.rounded(.up))) seconds remaining")
+                                        .monospacedDigit()
+                                    Text(trial.resetDescription(at: timeline.date))
+                                        .monospacedDigit()
+                                    Text("Daily allowance resets at midnight; the trial then continues each day until you end it.")
+                                        .font(.caption)
+                                }
+                            }
+                        } else {
+                            Text("Trial off. YouTube is available now.")
                         }
                         Text(trial.status).font(.callout)
-                        Text("Chrome and Safari only. Counts foreground tab time and redirects a YouTube tab when the five minutes expire. WeekPact must stay open; this trial can be bypassed and is separate from weekly commitments.")
+                        Text("Chrome and Safari only. Counts foreground tab time. End test now stops the redirect immediately. This trial is bypassable; recorded weekly plans do not block websites yet.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }.padding(8)
