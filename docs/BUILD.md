@@ -1,6 +1,6 @@
 # Run WeekPact on a Mac
 
-There is **no ready-to-install locked-mode app yet**. `swift run WeekPactApp` runs the usage tracker and old browser trial only. For a free local blocking test, follow the [README](../README.md#test-a-free-local-block). The original signed filter below requires an enrolled Apple Developer Program team because a free Personal Team cannot provision Network Extensions, even for a personal build. You do not need to pay to run the tracker or the local blocking test.
+There is **no ready-to-install locked-mode app yet**. `swift run WeekPactApp` runs the usage tracker and old browser trial only. For WeekPact's own free local blocking test, follow the [README](../README.md#test-weekpacts-local-blocker). The original signed filter below requires an enrolled Apple Developer Program team because a free Personal Team cannot provision Network Extensions, even for a personal build. You do not need to pay to run the tracker or the local blocking test.
 
 To try the signed filter from source:
 
