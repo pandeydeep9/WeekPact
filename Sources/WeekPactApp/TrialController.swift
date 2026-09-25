@@ -17,8 +17,9 @@ final class TrialController: ObservableObject {
     private var lastUptime = ProcessInfo.processInfo.systemUptime
 
     init() {
-        if let data = UserDefaults.standard.data(forKey: storageKey),
-           var saved = try? JSONDecoder().decode(TrialBudget.self, from: data) {
+        let legacy = UserDefaults.standard.data(forKey: storageKey)
+            .flatMap { try? JSONDecoder().decode(TrialBudget.self, from: $0) }
+        if var saved = TrialStateStore.read() ?? legacy {
             _ = saved.observe(url: nil, elapsedSeconds: 0, localDay: Self.localDay())
             budget = saved
             remainingSeconds = saved.remainingSeconds
@@ -35,6 +36,7 @@ final class TrialController: ObservableObject {
         budget = nil
         isRunning = false
         remainingSeconds = 300
+        TrialStateStore.clear()
         UserDefaults.standard.removeObject(forKey: storageKey)
         status = "Test ended. YouTube will no longer be redirected by WeekPact."
     }
@@ -121,6 +123,9 @@ final class TrialController: ObservableObject {
     private func persist() {
         guard let budget, let data = try? JSONEncoder().encode(budget) else { return }
         UserDefaults.standard.set(data, forKey: storageKey)
+        if !TrialStateStore.write(budget) {
+            status = "Trial state could not be shared with the background helper."
+        }
     }
 
     private static func localDay() -> String {
