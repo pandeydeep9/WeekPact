@@ -26,4 +26,14 @@ final class TrialBudgetTests: XCTestCase {
         XCTAssertFalse(TrialBudget.isYouTube(URL(string: "https://youtube.com.evil.example/")))
         XCTAssertFalse(TrialBudget.isYouTube(URL(string: "https://example.com/?next=youtube.com")))
     }
+
+    func testNextResetUsesLocalMidnightAcrossDaylightSavingTime() {
+        let formatter = ISO8601DateFormatter()
+        let beforeSpringChange = formatter.date(from: "2026-03-08T09:00:00Z")!
+        let springReset = TrialBudget.nextReset(after: beforeSpringChange, timeZoneID: "America/Los_Angeles")
+        XCTAssertEqual(springReset, formatter.date(from: "2026-03-09T07:00:00Z"))
+        let beforeFallChange = formatter.date(from: "2026-11-01T08:00:00Z")!
+        let fallReset = TrialBudget.nextReset(after: beforeFallChange, timeZoneID: "America/Los_Angeles")
+        XCTAssertEqual(fallReset, formatter.date(from: "2026-11-02T08:00:00Z"))
+    }
 }

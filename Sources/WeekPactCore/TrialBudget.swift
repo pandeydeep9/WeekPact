@@ -15,6 +15,12 @@ public struct TrialBudget: Codable, Equatable {
     public var remainingSeconds: Double { max(0, allowanceSeconds - usedSeconds) }
     public var isExhausted: Bool { usedSeconds >= allowanceSeconds }
 
+    public static func nextReset(after date: Date, timeZoneID: String) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: timeZoneID) ?? .current
+        return calendar.dateInterval(of: .day, for: date)!.end
+    }
+
     /// Returns true when a foreground YouTube tab must be redirected now.
     @discardableResult
     public mutating func observe(url: URL?, elapsedSeconds: Double, localDay: String) -> Bool {
