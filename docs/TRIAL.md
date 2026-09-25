@@ -5,6 +5,8 @@ This is a **browser-automation prototype**, not a locked commitment. It works on
 On your Mac, install Xcode command line tools if needed, then run:
 
 ```sh
+git clone https://github.com/pandeydeep9/WeekPact.git
+cd WeekPact
 swift test
 swift run WeekPactApp
 ```
