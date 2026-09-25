@@ -29,6 +29,9 @@ final class PolicyTests: XCTestCase {
         XCTAssertFalse(PromptParser.parse("Allow social media after dinner").unparsed.isEmpty)
         XCTAssertFalse(PromptParser.parse("YouTube after dinner").unparsed.isEmpty)
         XCTAssertEqual(PromptParser.parse("Block example.com").rules.first?.domains, ["example.com"])
+        let friday = PromptParser.parse("Block reddit on Friday").rules[0]
+        XCTAssertFalse(friday.days.contains(.friday))
+        XCTAssertTrue(friday.days.contains(.saturday))
     }
 
     func testDomainAndAllowanceEnforcement() {
