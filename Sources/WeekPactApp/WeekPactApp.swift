@@ -6,11 +6,12 @@ import WeekPactCore
 struct WeekPactApp: App {
     @StateObject private var model = PlannerModel()
     @StateObject private var trial = TrialController()
+    @StateObject private var usage = UsageController()
 
     var body: some Scene {
         WindowGroup("WeekPact") {
-            PlannerView(model: model, trial: trial)
-                .frame(minWidth: 820, minHeight: 680)
+            PlannerView(model: model, trial: trial, usage: usage)
+                .frame(minWidth: 700, minHeight: 540)
         }
     }
 }
@@ -111,133 +112,241 @@ final class PlannerModel: ObservableObject {
 struct PlannerView: View {
     @ObservedObject var model: PlannerModel
     @ObservedObject var trial: TrialController
+    @ObservedObject var usage: UsageController
+    @State private var page: Page = .today
+    @State private var command = ""
+
+    private enum Page: String, CaseIterable, Identifiable {
+        case today = "Today", plan = "Plan", report = "Report"
+        var id: String { rawValue }
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("WeekPact").font(.largeTitle.bold())
-                    Text("Set your limits for the coming week.")
-                        .font(.title3)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("WeekPact").font(.title.bold())
+                Spacer()
+                Picker("Screen", selection: $page) {
+                    ForEach(Page.allCases) { screen in Text(screen.rawValue).tag(screen) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 280)
+            }
+            HStack {
+                TextField("Type “generate report” or describe a rule", text: $command)
+                    .onSubmit(runCommand)
+                Button("Go", action: runCommand)
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    switch page {
+                    case .today: todayView
+                    case .plan: planView
+                    case .report: reportView
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: 940)
+        .frame(maxWidth: .infinity)
+    }
+
+    private func runCommand() {
+        let input = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !input.isEmpty else { return }
+        if input.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?")) == "generate report" {
+            usage.generateReport()
+            page = .report
+        } else {
+            model.request = input
+            model.interpret()
+            page = .plan
+        }
+        command = ""
+    }
+
+    private var todayView: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Today").font(.title2.bold())
+                    Text("Website time on this Mac · \(TimeZone.current.identifier)")
                         .foregroundStyle(.secondary)
                 }
-                Label("Prototype · Weekly plans are saved but not enforced", systemImage: "info.circle")
-                    .font(.callout)
-                    .foregroundStyle(.orange)
-
-                GroupBox("YouTube trial") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("5 minutes per day").font(.headline)
-                            Spacer()
-                            Text(trial.isRunning ? (trial.remainingSeconds <= 0 ? "LIMIT REACHED" : "ACTIVE") : "OFF")
-                                .font(.caption.bold())
-                                .foregroundStyle(trial.isRunning ? (trial.remainingSeconds <= 0 ? Color.orange : Color.green) : Color.secondary)
+                Spacer()
+                Button(usage.isTracking ? "Pause tracking" : "Resume tracking") {
+                    usage.setTracking(!usage.isTracking)
+                }
+            }
+            GroupBox("Website time") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(duration(usage.today.totalSeconds)).font(.largeTitle.bold()).monospacedDigit()
+                    if usage.today.sites.isEmpty {
+                        Text("No foreground website time recorded today.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(usage.today.sites.prefix(5)) { row in usageRow(row) }
+                    }
+                    HStack {
+                        Button("Generate 7-day report") {
+                            usage.generateReport()
+                            page = .report
+                        }.buttonStyle(.borderedProminent)
+                        Spacer()
+                        Text("Safari + Chrome · local only").font(.caption).foregroundStyle(.secondary)
+                    }
+                }.padding(8)
+            }
+            Text(usage.status).font(.callout).foregroundStyle(.secondary)
+            GroupBox("YouTube trial · 5 minutes/day") {
+                VStack(alignment: .leading, spacing: 10) {
+                    if trial.isRunning {
+                        ProgressView(value: 300 - trial.remainingSeconds, total: 300)
+                        Text("\(Int(trial.remainingSeconds.rounded(.up))) seconds left today")
+                            .font(.headline).monospacedDigit()
+                        TimelineView(.periodic(from: .now, by: 1)) { timeline in
+                            Text(trial.resetDescription(at: timeline.date))
+                                .font(.callout).monospacedDigit()
                         }
-                        if trial.isRunning {
-                            ProgressView(value: 300 - trial.remainingSeconds, total: 300)
-                            TimelineView(.periodic(from: .now, by: 1)) { timeline in
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text("\(Int(trial.remainingSeconds.rounded(.up))) seconds left today")
-                                        .font(.title2.bold())
-                                        .monospacedDigit()
-                                    Text(trial.resetDescription(at: timeline.date))
-                                        .font(.callout)
-                                        .monospacedDigit()
-                                }
-                            }
-                            Text("The allowance refills at midnight. This test continues tomorrow unless you end it.")
-                                .font(.callout)
-                            Button("End test now · allow YouTube") { trial.end() }
-                        } else {
-                            Text("Test is off. YouTube is available now.").font(.callout)
-                            TextField("Trial instruction", text: $trial.instruction)
+                        Button("End test now · allow YouTube") { trial.end() }
+                    } else {
+                        HStack {
+                            Text("Off · YouTube available").foregroundStyle(.secondary)
+                            Spacer()
                             Button("Start five-minute trial") { trial.start() }
                                 .buttonStyle(.borderedProminent)
                         }
+                    }
+                    DisclosureGroup("Trial details") {
+                        TextField("Trial instruction", text: $trial.instruction)
+                            .disabled(trial.isRunning)
+                        Text("The five minutes refill at local midnight. This browser test is bypassable and is separate from weekly plans.")
+                            .font(.caption).foregroundStyle(.secondary)
                         Text(trial.status).font(.caption).foregroundStyle(.secondary)
-                        Text("Safari and Chrome foreground tabs only. This test can be bypassed; weekly plans do not block sites yet.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }.padding(8)
-                }
+                    }
+                }.padding(8)
+            }
+            Label("Private-window coverage is unverified; unreadable tabs are omitted. Tracking stops if WeekPact quits.",
+                  systemImage: "info.circle")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
 
-                GroupBox("Describe your plan") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Write what you want next week. Review the interpreted rules below before recording them.")
-                            .font(.callout)
-                        TextEditor(text: $model.request)
-                            .frame(height: 84)
-                            .font(.body)
-                            .padding(6)
-                            .background(.background, in: RoundedRectangle(cornerRadius: 8))
-                        Button("Preview rules") { model.interpret() }
-                            .buttonStyle(.borderedProminent)
-                    }.padding(8)
+    private var reportView: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Text("Usage report").font(.title2.bold())
+                Spacer()
+                Button("Generate report") { usage.generateReport() }
+                    .buttonStyle(.borderedProminent)
+            }
+            if let report = usage.generatedReport {
+                Text("Last 7 local days · generated \(report.end.formatted(date: .abbreviated, time: .shortened))")
+                    .foregroundStyle(.secondary)
+                Text(duration(report.totalSeconds)).font(.largeTitle.bold())
+                Text("Foreground website time").foregroundStyle(.secondary)
+                if report.sites.isEmpty {
+                    Text("No sites recorded in this period.")
+                } else {
+                    ForEach(report.sites) { row in usageRow(row) }
                 }
-                if !model.unparsed.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text("Not understood — edit or remove these clauses before saving:").bold()
-                        ForEach(model.unparsed, id: \.self) { Text($0) }
-                        Button("I corrected the rules") { model.unparsed = [] }
-                    }.foregroundStyle(.orange)
-                }
+                Text("Sites and time are saved in Application Support/WeekPact/usage.json on this Mac. Only domains, service, browser, dates, and time are stored; page paths, search terms, and titles are omitted.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text("Generate a report when you want to see where your time went. You can also type “generate report” above.")
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
 
-                Divider()
+    private func usageRow(_ row: UsageReportRow) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(row.service == "Other" ? row.site : row.service).font(.body.bold())
+                if row.service != "Other" { Text(row.site).font(.caption).foregroundStyle(.secondary) }
+            }
+            Spacer()
+            Text(duration(row.seconds)).monospacedDigit()
+        }
+        .padding(.vertical, 5)
+    }
+
+    private func duration(_ seconds: Double) -> String {
+        let value = Int(seconds.rounded())
+        if value >= 3600 { return "\(value / 3600)h \((value % 3600) / 60)m" }
+        if value >= 60 { return "\(value / 60)m \(value % 60)s" }
+        return "\(value)s"
+    }
+
+    private var planView: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack {
+                Text("Plan your week").font(.title2.bold())
+                Spacer()
+                Text("Preview only · no blocking yet").font(.caption).foregroundStyle(.orange)
+            }
+            GroupBox("Describe your plan") {
+                VStack(alignment: .leading, spacing: 10) {
+                    TextEditor(text: $model.request)
+                        .frame(height: 72)
+                        .padding(6)
+                        .background(.background, in: RoundedRectangle(cornerRadius: 8))
+                    Button("Preview rules") { model.interpret() }
+                        .buttonStyle(.borderedProminent)
+                }.padding(8)
+            }
+            if !model.unparsed.isEmpty {
+                VStack(alignment: .leading) {
+                    Text("Not understood — edit or remove these clauses before saving:").bold()
+                    ForEach(model.unparsed, id: \.self) { Text($0) }
+                    Button("I corrected the rules") { model.unparsed = [] }
+                }.foregroundStyle(.orange)
+            }
+            HStack {
+                Text("Week of \(WeekClock.display(model.weekStart, timeZoneID: model.zone))")
+                    .font(.headline)
+                Spacer()
+                Button("This week") { model.prepareThisWeek() }
+                Button("Next week") { model.prepareNextWeek() }
+            }
+            Text("Time zone: \(model.zone)").font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Week of \(WeekClock.display(model.weekStart, timeZoneID: model.zone))")
-                        .font(.title2.bold())
-                    Spacer()
-                    Button("This week") { model.prepareThisWeek() }
-                    Button("Next week") { model.prepareNextWeek() }
-                }
-                Text("Time zone: \(model.zone)").foregroundStyle(.secondary)
-
-                VStack(alignment: .leading, spacing: 8) {
+                    Text("Service").frame(width: 130, alignment: .leading)
+                    ForEach(Weekday.ordered) { day in
+                        Text(day.shortName).frame(maxWidth: .infinity)
+                    }
+                }.font(.caption.bold())
+                ForEach(model.rules) { rule in
                     HStack {
-                        Text("Service").frame(width: 130, alignment: .leading)
+                        Text(rule.id.capitalized).frame(width: 130, alignment: .leading)
                         ForEach(Weekday.ordered) { day in
-                            Text(day.shortName).frame(maxWidth: .infinity)
-                        }
-                    }.font(.caption.bold())
-                    ForEach(model.rules) { rule in
-                        HStack {
-                            Text(rule.id.capitalized).frame(width: 130, alignment: .leading)
-                            ForEach(Weekday.ordered) { day in
-                                Button(summary(rule, day: day)) { model.toggle(day, for: rule.id) }
-                                    .font(.caption)
-                                    .buttonStyle(.borderless)
-                                    .help("Toggle \(day.shortName) for \(rule.id)")
-                                    .frame(maxWidth: .infinity)
-                            }
+                            Button(summary(rule, day: day)) { model.toggle(day, for: rule.id) }
+                                .font(.caption)
+                                .buttonStyle(.borderless)
+                                .help("Toggle \(day.shortName) for \(rule.id)")
+                                .frame(maxWidth: .infinity)
                         }
                     }
                 }
-                .padding()
-                .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
-
-                if model.rules.isEmpty {
-                    Label("No rules in this preview. Choose Preview rules above or add a service below.",
-                          systemImage: "calendar.badge.plus")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
-
-                ForEach($model.rules) { $rule in
-                    RuleEditor(rule: $rule)
-                }
-                Button("Add service") { model.addService() }
-                Divider()
-                Text("Review the dates, domains, and limits. Saving records a policy but does not block websites in this prototype.")
-                    .font(.callout)
+            }
+            .padding()
+            .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
+            if model.rules.isEmpty {
+                Text("Preview your request or add a service to begin.")
+                    .foregroundStyle(.secondary)
+            }
+            ForEach($model.rules) { $rule in RuleEditor(rule: $rule) }
+            Button("Add service") { model.addService() }
+            HStack {
                 Button("Record plan") { model.save() }
                     .buttonStyle(.borderedProminent)
                     .disabled(model.rules.isEmpty)
-                Text(model.status).font(.callout).foregroundStyle(.secondary)
+                Text(model.status).font(.caption).foregroundStyle(.secondary)
             }
-            .padding(24)
-            .frame(maxWidth: 1040)
-            .frame(maxWidth: .infinity)
         }
     }
 
@@ -285,7 +394,7 @@ struct RuleEditor: View {
     }
 
     var body: some View {
-        GroupBox(rule.id.capitalized) {
+        DisclosureGroup(rule.id.capitalized) {
             VStack(alignment: .leading, spacing: 12) {
                 TextField("Service name", text: $rule.id)
                 TextField("Domains, separated by commas", text: domains)

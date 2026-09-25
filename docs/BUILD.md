@@ -7,7 +7,7 @@ swift test
 swift run WeekPactApp
 ```
 
-The app lets you type a limited set of rules, edit them, inspect the week, and save the plan locally. Try the example prompt supplied in the editor. For an arbitrary site, enter `Block example.com`; edit the days, hours, and daily allowance in the resulting rule.
+The app's **Today / Plan / Report** screens let you inspect local website time, type and edit rules, and generate a seven-day report on demand. Try the example prompt in **Plan**. For an arbitrary site, enter `Block example.com`; edit the days, hours, and daily allowance in the resulting rule. See [usage and privacy](USAGE.md) for tracking coverage and limitations.
 
 To test a real five-minute YouTube redirect in Safari or Chrome, follow the [trial guide](TRIAL.md). The trial uses browser Automation while the app is running and is separate from weekly commitments.
 
