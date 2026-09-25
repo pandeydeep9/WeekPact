@@ -70,7 +70,7 @@ final class FilterSetupController: NSObject, ObservableObject, OSSystemExtension
                 return
             }
             let configuration = NEFilterProviderConfiguration()
-            configuration.filterBrowsers = true
+            // macOS filters socket flows, including browser network connections.
             configuration.filterSockets = true
             configuration.filterDataProviderBundleIdentifier = self.extensionID
             manager.providerConfiguration = configuration
