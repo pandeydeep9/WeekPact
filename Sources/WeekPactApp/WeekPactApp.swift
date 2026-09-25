@@ -115,49 +115,66 @@ struct PlannerView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("WeekPact").font(.largeTitle.bold())
-                Text("Planning prototype · Browser trial available below · No locked enforcement yet")
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("WeekPact").font(.largeTitle.bold())
+                    Text("Set your limits for the coming week.")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+                Label("Prototype · Weekly plans are saved but not enforced", systemImage: "info.circle")
+                    .font(.callout)
                     .foregroundStyle(.orange)
-                GroupBox("YouTube five-minute trial · prototype") {
-                    VStack(alignment: .leading, spacing: 10) {
-                        TextField("Trial instruction", text: $trial.instruction)
+
+                GroupBox("YouTube trial") {
+                    VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Button("Start trial") { trial.start() }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(trial.isRunning)
-                            if trial.isRunning {
-                                Button("End test now") { trial.end() }
-                            }
+                            Text("5 minutes per day").font(.headline)
+                            Spacer()
+                            Text(trial.isRunning ? (trial.remainingSeconds <= 0 ? "LIMIT REACHED" : "ACTIVE") : "OFF")
+                                .font(.caption.bold())
+                                .foregroundStyle(trial.isRunning ? (trial.remainingSeconds <= 0 ? Color.orange : Color.green) : Color.secondary)
                         }
                         if trial.isRunning {
+                            ProgressView(value: 300 - trial.remainingSeconds, total: 300)
                             TimelineView(.periodic(from: .now, by: 1)) { timeline in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("YouTube today: \(Int(trial.remainingSeconds.rounded(.up))) seconds remaining")
+                                VStack(alignment: .leading, spacing: 5) {
+                                    Text("\(Int(trial.remainingSeconds.rounded(.up))) seconds left today")
+                                        .font(.title2.bold())
                                         .monospacedDigit()
                                     Text(trial.resetDescription(at: timeline.date))
+                                        .font(.callout)
                                         .monospacedDigit()
-                                    Text("Daily allowance resets at midnight; the trial then continues each day until you end it.")
-                                        .font(.caption)
                                 }
                             }
+                            Text("The allowance refills at midnight. This test continues tomorrow unless you end it.")
+                                .font(.callout)
+                            Button("End test now · allow YouTube") { trial.end() }
                         } else {
-                            Text("Trial off. YouTube is available now.")
+                            Text("Test is off. YouTube is available now.").font(.callout)
+                            TextField("Trial instruction", text: $trial.instruction)
+                            Button("Start five-minute trial") { trial.start() }
+                                .buttonStyle(.borderedProminent)
                         }
-                        Text(trial.status).font(.callout)
-                        Text("Chrome and Safari only. Counts foreground tab time. End test now stops the redirect immediately. This trial is bypassable; recorded weekly plans do not block websites yet.")
+                        Text(trial.status).font(.caption).foregroundStyle(.secondary)
+                        Text("Safari and Chrome foreground tabs only. This test can be bypassed; weekly plans do not block sites yet.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }.padding(8)
                 }
-                Divider()
-                Text("Describe next week, then edit the exact rules before recording a plan.")
-                TextEditor(text: $model.request)
-                    .frame(height: 84)
-                    .font(.body)
-                    .padding(4)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary))
-                Button("Interpret request") { model.interpret() }
-                    .buttonStyle(.borderedProminent)
+
+                GroupBox("Describe your plan") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Write what you want next week. Review the interpreted rules below before recording them.")
+                            .font(.callout)
+                        TextEditor(text: $model.request)
+                            .frame(height: 84)
+                            .font(.body)
+                            .padding(6)
+                            .background(.background, in: RoundedRectangle(cornerRadius: 8))
+                        Button("Preview rules") { model.interpret() }
+                            .buttonStyle(.borderedProminent)
+                    }.padding(8)
+                }
                 if !model.unparsed.isEmpty {
                     VStack(alignment: .leading) {
                         Text("Not understood — edit or remove these clauses before saving:").bold()
@@ -199,6 +216,13 @@ struct PlannerView: View {
                 .padding()
                 .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10))
 
+                if model.rules.isEmpty {
+                    Label("No rules in this preview. Choose Preview rules above or add a service below.",
+                          systemImage: "calendar.badge.plus")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
                 ForEach($model.rules) { $rule in
                     RuleEditor(rule: $rule)
                 }
@@ -208,9 +232,12 @@ struct PlannerView: View {
                     .font(.callout)
                 Button("Record plan") { model.save() }
                     .buttonStyle(.borderedProminent)
+                    .disabled(model.rules.isEmpty)
                 Text(model.status).font(.callout).foregroundStyle(.secondary)
             }
             .padding(24)
+            .frame(maxWidth: 1040)
+            .frame(maxWidth: .infinity)
         }
     }
 
