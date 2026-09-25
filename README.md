@@ -2,7 +2,7 @@
 
 Choose websites, set a daily limit, and pick the midnight when the rule ends.
 
-WeekPact is a macOS local usage tracker with a compact **Today / Lock / Report** interface. It offers fixed website limits for YouTube, Netflix, Facebook, Messenger, Instagram, Reddit and Quora. A signed macOS system filter can apply those rules when WeekPact's window is closed. **The signed filter must be installed, approved, and tested on a real Mac before a limit can be committed.**
+WeekPact is a macOS local usage tracker with a compact **Today / Lock / Report** interface. It offers fixed website limits for YouTube, Netflix, Facebook, Messenger, Instagram, Reddit and Quora. A signed macOS system filter can apply those rules when WeekPact's window is closed. **Building that filter requires an enrolled Apple Developer Program team; a free Personal Team cannot sign it. The filter must be installed, approved, and tested on a real Mac before a limit can be committed.**
 
 The older five-minute YouTube trial is still available under Today for testing; it can be ended immediately. A **locked** rule starts now and ends at the start of the selected day at 12:00 AM. The chosen daily minutes refill each local midnight, but the rule itself cannot be reset from WeekPact before its end. This is a local software lock, not a guarantee against an administrator removing or disabling macOS protection.
 
