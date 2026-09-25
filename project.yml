@@ -32,16 +32,16 @@ targets:
   WeekPactFilter:
     type: system-extension
     platform: macOS
-    sources: [Sources/WeekPactFilterPrototype]
+    sources: [Sources/WeekPactFilterPrototype, FilterExtension/main.swift]
     dependencies:
       - package: WeekPact
         product: WeekPactCore
     info:
       path: FilterExtension/Info.plist
       properties:
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.networkextension.filter-data
-          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).WeekPactDataFilter
+        NetworkExtension:
+          NEProviderClasses:
+            com.apple.networkextension.filter-data: $(PRODUCT_MODULE_NAME).WeekPactDataFilter
     entitlements:
       path: FilterExtension/WeekPactFilter.entitlements
       properties:
