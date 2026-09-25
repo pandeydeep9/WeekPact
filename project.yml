@@ -1,0 +1,51 @@
+name: WeekPact
+options:
+  bundleIdPrefix: com.pandeydeep9
+  deploymentTarget:
+    macOS: "13.0"
+packages:
+  WeekPact:
+    path: .
+targets:
+  WeekPactMac:
+    type: application
+    platform: macOS
+    sources: [Sources/WeekPactApp]
+    dependencies:
+      - package: WeekPact
+        product: WeekPactCore
+      - target: WeekPactFilter
+        embed: true
+    info:
+      path: MacApp/Info.plist
+      properties:
+        CFBundleDisplayName: WeekPact
+        LSMinimumSystemVersion: "13.0"
+    entitlements:
+      path: MacApp/WeekPactMac.entitlements
+      properties:
+        com.apple.developer.system-extension.install: true
+        com.apple.developer.networking.networkextension:
+          - content-filter-provider-systemextension
+        com.apple.security.application-groups:
+          - group.com.pandeydeep9.WeekPact
+  WeekPactFilter:
+    type: system-extension
+    platform: macOS
+    sources: [Sources/WeekPactFilterPrototype, FilterExtension/main.swift]
+    dependencies:
+      - package: WeekPact
+        product: WeekPactCore
+    info:
+      path: FilterExtension/Info.plist
+      properties:
+        NetworkExtension:
+          NEProviderClasses:
+            com.apple.networkextension.filter-data: $(PRODUCT_MODULE_NAME).WeekPactDataFilter
+    entitlements:
+      path: FilterExtension/WeekPactFilter.entitlements
+      properties:
+        com.apple.developer.networking.networkextension:
+          - content-filter-provider-systemextension
+        com.apple.security.application-groups:
+          - group.com.pandeydeep9.WeekPact
