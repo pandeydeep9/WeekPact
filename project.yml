@@ -21,6 +21,7 @@ targets:
       properties:
         CFBundleDisplayName: WeekPact
         LSMinimumSystemVersion: "13.0"
+        NSAppleEventsUsageDescription: WeekPact reads the active browser tab and redirects YouTube when a trial allowance expires.
     entitlements:
       path: MacApp/WeekPactMac.entitlements
       properties:
