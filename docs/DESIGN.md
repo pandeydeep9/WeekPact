@@ -1,5 +1,7 @@
 # WeekPact design
 
+> This is the original concept exploration. The [current build plan](ROADMAP.md) sets the active scope, order, and acceptance criteria for the personal Mac app.
+
 WeekPact is a macOS app for deciding how you may use distracting online services **next week**, then committing to that decision. You can describe the rules in a chat box or set them in a weekly calendar. Both produce the same schedule for you to review before you lock it.
 
 The scope is any sites and groups you define: video, social media, shopping, news, gaming, or something else. The first release is for one person on one Mac.
