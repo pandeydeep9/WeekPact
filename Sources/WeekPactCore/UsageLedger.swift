@@ -43,11 +43,17 @@ public struct UsageLedger: Codable, Equatable {
             guard let bucketDate = Self.date(bucket.day, timeZoneID: timeZoneID) else { return false }
             return bucketDate >= start && bucketDate <= date
         }
-        let sites = Dictionary(grouping: included, by: { "\($0.service)|\($0.site)" }).map { _, items in
-            UsageReportRow(site: items[0].site, service: items[0].service,
-                           seconds: items.reduce(0) { $0 + $1.seconds },
-                           sessions: items.reduce(0) { $0 + $1.sessions })
-        }.sorted { $0.seconds == $1.seconds ? $0.site < $1.site : $0.seconds > $1.seconds }
+        let grouped: [String: [UsageBucket]] = Dictionary(grouping: included) { bucket in
+            bucket.service + "|" + bucket.site
+        }
+        var sites: [UsageReportRow] = []
+        for items in grouped.values {
+            let seconds = items.reduce(0.0) { $0 + $1.seconds }
+            let sessions = items.reduce(0) { $0 + $1.sessions }
+            sites.append(UsageReportRow(site: items[0].site, service: items[0].service,
+                                        seconds: seconds, sessions: sessions))
+        }
+        sites.sort { $0.seconds == $1.seconds ? $0.site < $1.site : $0.seconds > $1.seconds }
         return UsageReport(start: start, end: date, sites: sites)
     }
 
