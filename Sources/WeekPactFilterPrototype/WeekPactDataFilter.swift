@@ -48,8 +48,11 @@ public final class WeekPactDataFilter: NEFilterDataProvider {
         let attributes = [kSecGuestAttributeAudit: token] as CFDictionary
         guard SecCodeCopyGuestWithAttributes(nil, attributes, SecCSFlags(), &guest) == errSecSuccess,
               let guest else { return nil }
+        var staticCode: SecStaticCode?
+        guard SecCodeCopyStaticCode(guest, SecCSFlags(), &staticCode) == errSecSuccess,
+              let staticCode else { return nil }
         var signingInfo: CFDictionary?
-        guard SecCodeCopySigningInformation(guest, SecCSFlags(rawValue: kSecCSSigningInformation),
+        guard SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation),
                                             &signingInfo) == errSecSuccess,
               let signingInfo = signingInfo as? [String: Any] else { return nil }
         return signingInfo[kSecCodeInfoIdentifier as String] as? String
