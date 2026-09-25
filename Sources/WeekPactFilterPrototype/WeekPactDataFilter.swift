@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import NetworkExtension
 import WeekPactCore
 
@@ -22,12 +21,6 @@ public final class WeekPactDataFilter: NEFilterDataProvider {
 
     private func hostname(for flow: NEFilterFlow) -> String? {
         if let host = flow.url?.host { return host }
-        guard let socket = flow as? NEFilterSocketFlow,
-              let endpoint = socket.remoteEndpoint else { return nil }
-        if case let .hostPort(host, _) = endpoint,
-           case let .name(name, _) = host {
-            return name
-        }
-        return nil
+        return (flow as? NEFilterSocketFlow)?.remoteHostname
     }
 }
