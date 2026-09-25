@@ -18,13 +18,38 @@ final class TrialController: ObservableObject {
 
     init() {
         if let data = UserDefaults.standard.data(forKey: storageKey),
-           let saved = try? JSONDecoder().decode(TrialBudget.self, from: data) {
+           var saved = try? JSONDecoder().decode(TrialBudget.self, from: data) {
+            _ = saved.observe(url: nil, elapsedSeconds: 0, localDay: Self.localDay())
             budget = saved
             remainingSeconds = saved.remainingSeconds
             isRunning = true
             status = "Trial resumed. Keep WeekPact running for the block to work."
+            persist()
             scheduleTimer()
         }
+    }
+
+    func end() {
+        timer?.invalidate()
+        timer = nil
+        budget = nil
+        isRunning = false
+        remainingSeconds = 300
+        UserDefaults.standard.removeObject(forKey: storageKey)
+        status = "Test ended. YouTube will no longer be redirected by WeekPact."
+    }
+
+    func resetDescription(at date: Date) -> String {
+        let reset = TrialBudget.nextReset(after: date, timeZoneID: TimeZone.current.identifier)
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.timeZone = .current
+        let seconds = Int(ceil(reset.timeIntervalSince(date)))
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        let remainder = seconds % 60
+        return "Next reset: \(formatter.string(from: reset)) (\(TimeZone.current.identifier)) · in \(hours)h \(minutes)m \(remainder)s"
     }
 
     func start() {
