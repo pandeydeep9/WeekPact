@@ -48,22 +48,32 @@ public enum PromptParser {
         let domains = found?.1 ?? [name]
 
         var days = Set(Weekday.allCases)
+        var hasDayQualifier = false
         if lower.contains("weekdays") || lower.contains("workdays") {
+            hasDayQualifier = true
             days = [.monday, .tuesday, .wednesday, .thursday, .friday]
         } else if lower.contains("weekends") {
+            hasDayQualifier = true
             days = [.saturday, .sunday]
         } else {
             let named = Weekday.allCases.filter { lower.contains($0.shortName.lowercased()) || lower.contains(String(describing: $0)) }
-            if !named.isEmpty { days = Set(named) }
+            if !named.isEmpty {
+                hasDayQualifier = true
+                days = Set(named)
+            }
         }
         if lower.contains("monday through thursday") || lower.contains("mon-thu") {
+            hasDayQualifier = true
             days = [.monday, .tuesday, .wednesday, .thursday]
         }
 
         if lower.contains("unblock") { return nil }
         let blocked = lower.contains("block") || lower.contains("never")
         if blocked {
-            return Rule(id: name, domains: domains, days: [], windows: [], dailySeconds: nil)
+            return Rule(id: name, domains: domains,
+                        days: hasDayQualifier ? Set(Weekday.allCases).subtracting(days) : [],
+                        windows: hasDayQualifier ? [TimeWindow(startMinute: 0, endMinute: 1440)] : [],
+                        dailySeconds: nil)
         }
 
         var start = 0
