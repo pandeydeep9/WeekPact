@@ -15,6 +15,10 @@ jobs:
         run: swift test
       - name: Build Mac planner
         run: swift build --product WeekPactApp
+      - name: Build browser trial agent
+        run: |
+          bash -n scripts/trial-agent.sh
+          swift build --product WeekPactTrialAgent
       - name: Compile filter prototype
         run: swift build --target WeekPactFilterPrototype
       - name: Generate and compile macOS bundle
