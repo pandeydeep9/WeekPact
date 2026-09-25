@@ -38,6 +38,7 @@ final class UsageController: ObservableObject {
         previousSite = nil
         lastUptime = ProcessInfo.processInfo.systemUptime
         status = enabled ? "Tracking resumed." : "Tracking paused. No website time is being saved."
+        writeHeartbeat(browser: nil, host: nil)
     }
 
     func generateReport() {
@@ -52,10 +53,14 @@ final class UsageController: ObservableObject {
         let uptime = ProcessInfo.processInfo.systemUptime
         let elapsed = min(2.5, max(0, uptime - lastUptime))
         lastUptime = uptime
-        guard isTracking else { return }
+        guard isTracking else {
+            writeHeartbeat(browser: nil, host: nil)
+            return
+        }
         guard let bundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier,
               bundle == "com.apple.Safari" || bundle == "com.google.Chrome" else {
             previousSite = nil
+            writeHeartbeat(browser: nil, host: nil)
             return
         }
         let browser = bundle == "com.apple.Safari" ? "Safari" : "Chrome"
@@ -72,12 +77,14 @@ final class UsageController: ObservableObject {
         if failure != nil {
             previousSite = nil
             status = "Cannot read \(browser)'s front tab. Check macOS Automation permission; private windows may need separate coverage."
+            writeHeartbeat(browser: nil, host: nil)
             return
         }
         let url = result.stringValue.flatMap(URL.init(string:))
         guard let site = UsageLedger.site(for: url) else {
             previousSite = nil
             status = "No readable website in \(browser)'s front tab. Unreadable tabs are not counted."
+            writeHeartbeat(browser: nil, host: nil)
             return
         }
         let key = "\(browser)|\(site.service)|\(site.host)"
@@ -86,6 +93,41 @@ final class UsageController: ObservableObject {
         previousSite = key
         status = "Counting \(site.service == "Other" ? site.host : site.service) in \(browser)."
         persist()
+        writeHeartbeat(browser: bundle, host: site.host)
+        redirectIfLimitReached(browser: bundle, host: site.host)
+    }
+
+    func refreshHeartbeat() { writeHeartbeat(browser: nil, host: nil) }
+
+    private func writeHeartbeat(browser: String?, host: String?) {
+        let now = Date()
+        let zone = TimeZone.current.identifier
+        let day = LimitClock.localDay(now, timeZoneID: zone)
+        var totals: [LockedService: Double] = [:]
+        for bucket in ledger.buckets where bucket.day == day {
+            if let service = LockedService(rawValue: bucket.service.lowercased()) {
+                totals[service, default: 0] += bucket.seconds
+            }
+        }
+        let heartbeat = UsageHeartbeat(sampledAt: now, day: day, seconds: totals,
+                                       observedBrowser: browser, observedHost: host)
+        _ = SharedLimitStore.writeUsage(heartbeat)
+    }
+
+    private func redirectIfLimitReached(browser: String, host: String) {
+        guard let book = SharedLimitStore.readBook(),
+              !book.permits(host: host, sourceAppIdentifier: browser, at: .now,
+                            usage: SharedLimitStore.readUsage()),
+              book.active(at: .now).contains(where: { $0.service.matches(host: host) }) else { return }
+        let tab = browser == "com.apple.Safari" ? "current tab" : "active tab"
+        let script = """
+        tell application id "\(browser)"
+            if exists front window then set URL of \(tab) of front window to "about:blank"
+        end tell
+        """
+        var error: NSDictionary?
+        NSAppleScript(source: script)?.executeAndReturnError(&error)
+        if error == nil { status = "Limit reached. Redirected \(host) until the next daily refill or rule end." }
     }
 
     private func persist() {
