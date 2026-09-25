@@ -15,7 +15,9 @@ public enum PromptParser {
         ("youtube", ["youtube.com", "youtu.be"]),
         ("netflix", ["netflix.com"]),
         ("reddit", ["reddit.com"]),
+        ("quora", ["quora.com"]),
         ("instagram", ["instagram.com"]),
+        ("messenger", ["messenger.com", "m.me"]),
         ("facebook", ["facebook.com"]),
         ("tiktok", ["tiktok.com"]),
         ("x.com", ["x.com", "twitter.com"])
