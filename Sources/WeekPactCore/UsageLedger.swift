@@ -66,9 +66,10 @@ public struct UsageLedger: Codable, Equatable {
             normalized == domain || normalized.hasSuffix("." + domain)
         }
         let service: String
-        if matches("youtube.com") || matches("youtu.be") || matches("youtube-nocookie.com") {
+        if matches("youtube.com") || matches("youtu.be") || matches("youtube-nocookie.com")
+            || matches("googlevideo.com") || matches("ytimg.com") {
             service = "YouTube"
-        } else if matches("netflix.com") {
+        } else if matches("netflix.com") || matches("nflxvideo.net") {
             service = "Netflix"
         } else if matches("messenger.com") || matches("m.me")
                     || (matches("facebook.com") && url.path.lowercased().hasPrefix("/messages")) {
