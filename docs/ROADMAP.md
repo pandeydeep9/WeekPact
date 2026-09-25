@@ -11,7 +11,7 @@ This is for one person on one Mac. No distribution setup, paid Apple membership,
 ## What we know now
 
 - The Today / Lock / Report app and fixed-service policy exist as prototypes. Usage is measured in the frontmost Safari/Chrome tab **only while the app runs**. The current locked mode depends on an Apple entitlement a free Personal Team cannot use.
-- WeekPact's own `/etc/hosts` test blocked `example.com` in Chrome and removed the block after two minutes on Deep's Mac. The YouTube trial blocked a direct connection and Chrome showed its offline screen ([coverage #15](https://github.com/pandeydeep9/WeekPact/issues/15)); video playback, Safari, private windows, other browsers, native apps, and reboot behavior remain unverified.
+- WeekPact's own `/etc/hosts` test blocked `example.com` in Chrome and removed the block after two minutes on Deep's Mac. The YouTube trial blocked a direct connection and Chrome showed its offline screen ([coverage #15](https://github.com/pandeydeep9/WeekPact/issues/15)). Deep reports inconsistent browser access while the trial is pending; playback and timing need a controlled check. Safari, private windows, other browsers, native apps, and reboot behavior remain unverified.
 - A hosts-file block cannot itself measure time, cover every service hostname, or promise protection against private DNS and VPNs. It is an experiment, not proof of the finished lock.
 
 ## Building blocks
