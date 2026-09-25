@@ -22,11 +22,29 @@ I can click a cell to correct the plan. I review the covered domains and press *
 ## Rules of commitment
 
 - A week runs Monday 00:00 to the next Monday 00:00 in the selected time zone. The app always displays dates, not just day names.
+- A daily allowance refills at 00:00 in the rule's committed time zone, even on days when the service is blocked. Unused minutes do not carry over. Midnight refills minutes; it does not remove or weaken a rule.
+- A time window opens and closes at its scheduled local times. If the daily allowance was used up, the next window that day does not refill it.
 - Drafts can be edited. Committing freezes the week's maximum access. A change that only reduces access takes effect immediately.
 - A weaker change is scheduled for **at least seven days later** and cannot alter an already committed week. Show its earliest effective date before accepting it.
 - If no new plan is committed, carry forward the current restrictions. Never revert to unlimited access by omission.
 - A rule can block a service, set available hours, set a daily allowance, or combine hours and an allowance. Groups of sites may share one allowance. When rules overlap, the stricter result applies.
 - The app treats a change as “stricter” only if it grants no additional access across domains, hours, and allowances. Ambiguous changes are queued for later.
+
+### Status when I open the app
+
+Show the current state of each service and a countdown to the next relevant change. Keep **allowance reset**, **window opening**, and **rule change** separate, since a reset does not necessarily grant access.
+
+| Field | Example for a spent YouTube allowance at 8 PM |
+|---|---|
+| Current access | Blocked: today's 30 minutes used |
+| Next allowance reset | Tomorrow 12:00 AM, in 4 hours |
+| Next permitted window | Tomorrow 6:00 PM, if allowance remains |
+| Active rule | 30 minutes/day, 6–10 PM; carries forward after Sunday |
+| Pending relaxation | Effective Monday, October 12, if one was requested |
+
+The status screen also shows the date and time zone, actual minutes used and remaining, coverage health, and the exact date of the next committed weekly plan. For a service blocked every day, say **Blocked until a future relaxation takes effect**; do not display midnight as an unblock time. Countdowns recompute after sleep, reboot, or a time-zone change. If clock integrity is uncertain, retain the restriction and show that time verification is needed.
+
+This is the intended committed experience, not the current trial. In the first prototype, the status panel only has a measured YouTube trial counter and its next local-midnight reset. Recorded weekly plans are previews and are not enforced.
 
 **Planning cutoff to decide:** This draft lets me commit the coming Monday–Sunday week any time before it starts. It does not require committing a full seven days before Monday. That is a product choice to confirm.
 
