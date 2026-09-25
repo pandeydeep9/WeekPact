@@ -50,10 +50,12 @@ This is the intended committed experience, not the current trial. In the first p
 
 ## Screens
 
-1. **Plan:** Type a request or edit a weekly grid. The chat proposes concrete rules; it never commits them. Ask follow-up questions for phrases such as “after dinner” or “social media.”
-2. **Review:** Show the actual dates, time zone, limits, domains covered, and any unsupported coverage. A deterministic validator checks the proposed rules. Commitment requires an explicit confirmation.
-3. **This week:** Show access status and time remaining. Offer “Tighten now” and “Request a later change,” with the earliest effective date visible.
+1. **Today:** Show current access and countdowns beside today's local website time. Keep the trial visibly distinct from committed enforcement.
+2. **Plan:** Type a request or edit a weekly grid. The chat proposes concrete rules; it never commits them. Ask follow-up questions for phrases such as “after dinner” or “social media.”
+3. **Report:** Generate a local report on demand, showing the past seven days by site and service. Track the named set (YouTube, Netflix, Facebook, Messenger, Instagram, Reddit, Quora) plus other visited sites, with a clear coverage status.
 4. **Setup:** Install the required macOS component, verify that blocking works, and run a short test before the first real commitment. Clearly report if protection becomes inactive.
+
+The first usage prototype stores only hostnames, service names, browser names, day, time and session counts locally. It does not store full URLs or browsing content. Private/incognito tab access must be validated for each browser. When a tab cannot be observed, its time must be reported as missing, never inferred from an unrelated network flow. An installed background helper is needed before reports can cover time when the planning app is closed.
 
 ## How enforcement could work
 
