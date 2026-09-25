@@ -10,15 +10,15 @@ This is for one person on one Mac. No distribution setup, paid Apple membership,
 
 ## What we know now
 
-- The Today / Lock / Report app and fixed-service policy exist as prototypes. Usage is measured in the frontmost Safari/Chrome tab **only while the app runs**. The current locked mode depends on an Apple entitlement a free Personal Team cannot use.
-- WeekPact's own `/etc/hosts` test blocked `example.com` in Chrome and removed the block after two minutes on Deep's Mac. The YouTube trial blocked a direct connection and Chrome showed its offline screen ([coverage #15](https://github.com/pandeydeep9/WeekPact/issues/15)). Deep reports inconsistent browser access while the trial is pending; playback and timing need a controlled check. Safari, private windows, other browsers, native apps, and reboot behavior remain unverified.
+- The Today / Lock / Report app and fixed-service policy exist as prototypes. The original five-minute YouTube trial **worked** on Deep's Mac: while the UI runs, it reads the foreground Safari/Chrome tab and redirects YouTube to `about:blank` once time is spent. It is bypassable and stops enforcing when the app quits. The separate signed filter for a durable lock depends on an Apple entitlement a free Personal Team cannot use.
+- The separate `/etc/hosts` test blocked `example.com` in Chrome. Its YouTube test blocked a direct `curl` connection and once showed Chrome's offline screen, but Deep later reported no observable impact when opening YouTube ([coverage #15](https://github.com/pandeydeep9/WeekPact/issues/15)). Browser enforcement by `/etc/hosts` is unproven; the UI trial and this system test are different implementations.
 - A hosts-file block cannot itself measure time, cover every service hostname, or promise protection against private DNS and VPNs. It is an experiment, not proof of the finished lock.
 
 ## Building blocks
 
 | Order | Block | Done when | Now |
 | --- | --- | --- | --- |
-| 1 | **Prove enforcement** | A two-minute YouTube block stops new and already-open access in the browsers/modes Deep uses, then expires correctly. Test reboot, app quit, DNS settings, and native clients. Decide the enforcement method from results; do not build a weekly lock on an unproven blocker. | Example.com in Chrome passed; YouTube Chrome offline screen observed ([#15](https://github.com/pandeydeep9/WeekPact/issues/15)). |
+| 1 | **Prove enforcement** | Start from the working foreground-tab redirect. Find and test a method that enforces the same result after the UI quits, across the browsers/modes Deep uses. Check already-open videos, reboot, private windows and native clients before choosing a weekly lock mechanism. | In-app YouTube trial worked while open; `/etc/hosts` YouTube trial reported no impact in a later browser check ([#15](https://github.com/pandeydeep9/WeekPact/issues/15)). |
 | 2 | **Measure daily use** | Foreground viewing time is counted once across supported browsers, private windows, idle/sleep, and service domains; unsupported cases are shown and do not silently get unlimited time. | Safari/Chrome app-open prototype. |
 | 3 | **Make rules durable** | A confirmed rule and usage ledger survive UI quit and restart; selected sites, daily allowance, local midnight reset, and the exact end date are consistent. The UI cannot loosen an active rule. | Policy logic prototype; persistent helper incomplete. |
 | 4 | **Connect time to blocking** | Each service works until its allowance is spent, then blocks promptly; midnight restores only that day's allowance. Test two services with different usage on the same day. | Not built. |
