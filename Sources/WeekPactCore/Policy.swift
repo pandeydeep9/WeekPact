@@ -154,9 +154,7 @@ public struct PolicyBook: Codable {
         var committed = candidate
         committed.committedAt = now
         if let previous, !PolicyComparison.isNoWeaker(candidate.rules, than: previous.rules) {
-            let coolingEnd = now.addingTimeInterval(7 * 24 * 60 * 60)
-            var earliest = WeekClock.start(containing: coolingEnd, timeZoneID: zone)
-            if earliest < coolingEnd { earliest = WeekClock.next(after: coolingEnd, timeZoneID: zone) }
+            let earliest = earliestRelaxationWeek(after: now, timeZoneID: zone)
             // A future committed week is immutable unless the new policy tightens it.
             var target = max(earliest, candidate.weekStart)
             while policies.contains(where: { $0.weekStart == target }) {
@@ -167,7 +165,25 @@ public struct PolicyBook: Codable {
             return .scheduled(target)
         }
         policies.append(committed)
+        // A new tightening must not be silently undone by an older queued relaxation.
+        let earliest = earliestRelaxationWeek(after: now, timeZoneID: zone)
+        for index in policies.indices where policies[index].id != committed.id {
+            let future = policies[index]
+            guard future.weekStart > committed.weekStart, future.weekStart < earliest,
+                  !PolicyComparison.isNoWeaker(future.rules, than: committed.rules) else { continue }
+            var destination = earliest
+            while policies.contains(where: { $0.weekStart == destination }) {
+                destination = WeekClock.next(after: destination, timeZoneID: zone)
+            }
+            policies[index].weekStart = destination
+        }
         return .committed(candidate.weekStart)
+    }
+
+    private func earliestRelaxationWeek(after now: Date, timeZoneID: String) -> Date {
+        let end = now.addingTimeInterval(7 * 24 * 60 * 60)
+        let start = WeekClock.start(containing: end, timeZoneID: timeZoneID)
+        return start < end ? WeekClock.next(after: end, timeZoneID: timeZoneID) : start
     }
 
     private func validate(_ policy: WeeklyPolicy) throws {

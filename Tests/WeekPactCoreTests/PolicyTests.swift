@@ -29,6 +29,9 @@ final class PolicyTests: XCTestCase {
         XCTAssertFalse(PromptParser.parse("Allow social media after dinner").unparsed.isEmpty)
         XCTAssertFalse(PromptParser.parse("YouTube after dinner").unparsed.isEmpty)
         XCTAssertEqual(PromptParser.parse("Block example.com").rules.first?.domains, ["example.com"])
+        let friday = PromptParser.parse("Block reddit on Friday").rules[0]
+        XCTAssertFalse(friday.days.contains(.friday))
+        XCTAssertTrue(friday.days.contains(.saturday))
     }
 
     func testDomainAndAllowanceEnforcement() {
@@ -66,6 +69,19 @@ final class PolicyTests: XCTestCase {
         XCTAssertEqual(try book.submit(policy(start, rules: [youtube(minutes: 15)]),
                                        now: date("2026-09-30T18:00:00Z")), .committed(date(start)))
         XCTAssertEqual(book.effective(at: date("2026-10-01T18:00:00Z"))?.rules[0].dailySeconds, 900)
+    }
+
+    func testLaterTighteningPostponesQueuedRelaxation() throws {
+        var book = PolicyBook()
+        _ = try book.submit(policy("2026-09-28T07:00:00Z", rules: [youtube()]),
+                            now: date("2026-09-25T18:00:00Z"))
+        let relaxed = policy("2026-10-05T07:00:00Z", rules: [youtube(minutes: 60)])
+        XCTAssertEqual(try book.submit(relaxed, now: date("2026-09-30T18:00:00Z")),
+                       .scheduled(date("2026-10-12T07:00:00Z")))
+        _ = try book.submit(policy("2026-10-05T07:00:00Z", rules: [youtube(minutes: 15)]),
+                            now: date("2026-10-11T18:00:00Z"))
+        XCTAssertEqual(book.effective(at: date("2026-10-13T18:00:00Z"))?.rules[0].dailySeconds, 900)
+        XCTAssertEqual(book.effective(at: date("2026-10-20T18:00:00Z"))?.rules[0].dailySeconds, 3600)
     }
 
     func testWeekBoundaryAcrossDaylightSavingChange() {
