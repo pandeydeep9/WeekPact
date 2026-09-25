@@ -11,14 +11,14 @@ swift test
 swift run WeekPactApp
 ```
 
-In the **Try a five-minute YouTube limit today** section:
+In **Today**, expand **Old five-minute YouTube browser trial**:
 
-1. Keep `YouTube 5 minutes per day` in the instruction field and click **Start trial**.
+1. Click **Start browser trial**.
 2. Open YouTube in Safari or Chrome and keep that browser tab frontmost. Approve the macOS Automation prompt for browser access. If it was denied, check **System Settings → Privacy & Security → Automation**.
 3. Watch the remaining seconds in WeekPact. The counter should pause when another app or site is frontmost.
-4. At zero, WeekPact attempts to redirect the YouTube tab to `about:blank`. Opening YouTube again in a supported browser should cause another redirect while WeekPact keeps running. The app shows the next local midnight and a live countdown.
+4. At zero, WeekPact attempts to redirect the YouTube tab to `about:blank`. Opening YouTube again in a supported browser should cause another redirect while WeekPact keeps running. The trial resets at local midnight.
 
-**Get YouTube back now:** Click **End test now** in WeekPact, then reopen YouTube. This stops redirects and clears the test counter. In an older copy of the app without this button, quit WeekPact with **⌘Q**, then reopen YouTube. The redirect happens only while the app is running.
+**Get YouTube back now:** Click **End browser trial** in WeekPact, then reopen YouTube. This stops redirects and clears the test counter. Without the optional helper below, quitting WeekPact with **⌘Q** also stops redirects.
 
 The five-minute allowance resets at the next local midnight, and the same five-minute trial continues each day until you end it. Reopening WeekPact retains today's counter if you have not ended the test. Clicking **Start trial** while already running cannot refill it. Ending this test and starting it again does give a fresh counter: **this is a bypassable prototype, not a committed rule**. The system filter in the repository is still inactive. See [commitment and reset semantics](DESIGN.md#rules-of-commitment) for the intended product.
 
