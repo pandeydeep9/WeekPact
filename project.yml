@@ -11,6 +11,8 @@ targets:
     type: application
     platform: macOS
     sources: [Sources/WeekPactApp]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.pandeydeep9.WeekPact
     dependencies:
       - package: WeekPact
         product: WeekPactCore
@@ -21,7 +23,7 @@ targets:
       properties:
         CFBundleDisplayName: WeekPact
         LSMinimumSystemVersion: "13.0"
-        NSAppleEventsUsageDescription: WeekPact reads the active browser tab and redirects YouTube when a trial allowance expires.
+        NSAppleEventsUsageDescription: WeekPact measures foreground browser time and redirects a selected site when its daily allowance expires.
     entitlements:
       path: MacApp/WeekPactMac.entitlements
       properties:
@@ -34,6 +36,8 @@ targets:
     type: system-extension
     platform: macOS
     sources: [Sources/WeekPactFilterPrototype, FilterExtension/main.swift]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.pandeydeep9.WeekPact.Filter
     dependencies:
       - package: WeekPact
         product: WeekPactCore

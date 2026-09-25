@@ -2,9 +2,9 @@
 
 Plan next week's internet rules, review them, and commit. You may tighten a committed rule immediately; a request to loosen it waits at least seven days and cannot alter an already committed week.
 
-WeekPact is a macOS planning and local usage-tracking prototype. It has a compact **Today / Plan / Report** interface, a Swift policy engine, local persistence, tests, and an unactivated Network Extension feasibility prototype. A separate [five-minute YouTube trial](docs/TRIAL.md) uses Safari or Chrome Automation to redirect the tab at its limit. **This trial is bypassable; committed weekly website blocking is not active yet.**
+WeekPact is a macOS local usage tracker with a compact **Today / Lock / Report** interface. It offers fixed website limits for YouTube, Netflix, Facebook, Messenger, Instagram, Reddit and Quora. A signed macOS system filter can apply those rules when WeekPact's window is closed. **The signed filter must be installed, approved, and tested on a real Mac before a limit can be committed.**
 
-The trial's five minutes reset at local midnight every day. To get YouTube back now, click **End test now** in the app (or quit an older app with ⌘Q). A future committed rule would keep its schedule across daily resets and weeks until an eligible scheduled relaxation takes effect. The app's [design](docs/DESIGN.md#status-when-i-open-the-app) specifies per-service status and countdowns.
+The older five-minute YouTube trial is still available under Today for testing; it can be ended immediately. A **locked** rule starts now and ends at the start of the selected day at 12:00 AM. The chosen daily minutes refill each local midnight, but the rule itself cannot be reset from WeekPact before its end. This is a local software lock, not a guarantee against an administrator removing or disabling macOS protection.
 
 ## Run on a Mac
 
@@ -16,9 +16,9 @@ cd WeekPact
 swift run WeekPactApp
 ```
 
-In **Today**, WeekPact counts time spent on the frontmost website in Safari or Chrome while the app is running. Grant macOS Automation access when prompted. Choose **Generate 7-day report**, or type `generate report` in the command field, to see a report on demand. **Plan** contains the weekly rule editor. The YouTube trial remains in Today: start it to test five minutes per day; click **End test now · allow YouTube** to stop it. Recording a plan currently saves a preview; it does not activate blocking. Run `swift test` to check the policy engine. See [usage and privacy](docs/USAGE.md), [trial instructions](docs/TRIAL.md), [build details](docs/BUILD.md), and the [design](docs/DESIGN.md).
+In **Today**, WeekPact counts frontmost Safari/Chrome website time while its process runs. **Lock** selects fixed services, a daily allowance (30 minutes, 1 hour, 2 hours or 3 hours), and the midnight when the rule expires. **Report** summarizes the last seven days when you request it; typing `generate report` works too. The `swift run` command above is for the tracking/trial prototype: it **cannot install or commit a system filter**. To turn on blocking, use the [signed Xcode build and verification steps](docs/BUILD.md). See [usage and privacy](docs/USAGE.md) and the [design](docs/DESIGN.md).
 
-This is a source-run macOS prototype, not a signed one-click installer. Enforced weekly blocking still requires a signed and activated macOS component and real-Mac testing.
+This is source-run code, not a signed one-click installer. Stronger uninstall resistance requires separate administrator or device management; a user who administers this Mac can ultimately turn off the filter.
 
 ### Prototype screenshot
 

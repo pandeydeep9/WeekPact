@@ -7,6 +7,9 @@ public enum Weekday: Int, Codable, CaseIterable, Hashable, Identifiable {
     public var shortName: String {
         ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][rawValue - 1]
     }
+    public var fullName: String {
+        ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][rawValue - 1]
+    }
     public static let ordered: [Weekday] = [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
 }
 

@@ -44,18 +44,18 @@ Show the current state of each service and a countdown to the next relevant chan
 
 The status screen also shows the date and time zone, actual minutes used and remaining, coverage health, and the exact date of the next committed weekly plan. For a service blocked every day, say **Blocked until a future relaxation takes effect**; do not display midnight as an unblock time. Countdowns recompute after sleep, reboot, or a time-zone change. If clock integrity is uncertain, retain the restriction and show that time verification is needed.
 
-This is the intended committed experience, not the current trial. In the first prototype, the status panel only has a measured YouTube trial counter and its next local-midnight reset. Recorded weekly plans are previews and are not enforced.
+The fixed-service lock now has a signed-filter implementation path, separate from the old browser trial. It requires user approval and real-Mac coverage testing. An unsigned `swift run` cannot enable it. Its per-service countdown appears in Today; the old generic weekly plan is no longer the primary UI.
 
 **Planning cutoff to decide:** This draft lets me commit the coming Monday–Sunday week any time before it starts. It does not require committing a full seven days before Monday. That is a product choice to confirm.
 
 ## Screens
 
-1. **Today:** Show current access and countdowns beside today's local website time. Keep the trial visibly distinct from committed enforcement.
-2. **Plan:** Type a request or edit a weekly grid. The chat proposes concrete rules; it never commits them. Ask follow-up questions for phrases such as “after dinner” or “social media.”
+1. **Today:** Show active fixed-service limits, end countdowns and today's local website time. Keep the old trial visibly distinct from committed enforcement.
+2. **Lock:** Pick fixed services, one daily allowance for each, and an end day at midnight. Start now, show the exact end date, and require confirmation. The generic weekly planner is a later expansion.
 3. **Report:** Generate a local report on demand, showing the past seven days by site and service. Track the named set (YouTube, Netflix, Facebook, Messenger, Instagram, Reddit, Quora) plus other visited sites, with a clear coverage status.
 4. **Setup:** Install the required macOS component, verify that blocking works, and run a short test before the first real commitment. Clearly report if protection becomes inactive.
 
-The first usage prototype stores only hostnames, service names, browser names, day, time and session counts locally. It does not store full URLs or browsing content. Private/incognito tab access must be validated for each browser. When a tab cannot be observed, its time must be reported as missing, never inferred from an unrelated network flow. An installed background helper is needed before reports can cover time when the planning app is closed.
+The usage prototype stores only hostnames, service names, browser names, day, time and session counts locally. It does not store full URLs or browsing content. Private/incognito tab access must be validated for each browser. When a tab cannot be observed, its time must be reported as missing, never inferred from an unrelated network flow. The filter denies a selected service if the sampler is missing or stale. Reliable reports while the app process is gone need a separate background helper; the login registration for the main app does not make reporting continuous if someone quits it.
 
 ## How enforcement could work
 
