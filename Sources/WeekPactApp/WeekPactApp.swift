@@ -68,6 +68,18 @@ final class PlannerModel: ObservableObject {
                           days: Set(Weekday.allCases), windows: [TimeWindow(startMinute: 0, endMinute: 1440)]))
     }
 
+    func toggle(_ day: Weekday, for serviceID: String) {
+        guard let index = rules.firstIndex(where: { $0.id == serviceID }) else { return }
+        if rules[index].days.contains(day) {
+            rules[index].days.remove(day)
+        } else {
+            rules[index].days.insert(day)
+            if rules[index].windows.isEmpty {
+                rules[index].windows = [TimeWindow(startMinute: 0, endMinute: 1440)]
+            }
+        }
+    }
+
     func save() {
         guard unparsed.isEmpty else {
             status = "Resolve the unparsed clauses before saving."
@@ -140,8 +152,10 @@ struct PlannerView: View {
                         HStack {
                             Text(rule.id.capitalized).frame(width: 130, alignment: .leading)
                             ForEach(Weekday.ordered) { day in
-                                Text(summary(rule, day: day))
+                                Button(summary(rule, day: day)) { model.toggle(day, for: rule.id) }
                                     .font(.caption)
+                                    .buttonStyle(.borderless)
+                                    .help("Toggle \(day.shortName) for \(rule.id)")
                                     .frame(maxWidth: .infinity)
                             }
                         }
