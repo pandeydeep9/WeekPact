@@ -2,21 +2,36 @@ import Foundation
 import NetworkExtension
 import WeekPactCore
 
-/// Compile-time feasibility spike. The packaged system extension still needs
-/// signing, activation, coverage testing, and trusted policy storage.
+/// The signed system extension reads fixed commitments even when the UI is closed.
 public final class WeekPactDataFilter: NEFilterDataProvider {
     public override func handleNewFlow(_ flow: NEFilterFlow) -> NEFilterNewFlowVerdict {
+        if let host = hostname(for: flow),
+           SharedFilterTestRule.read()?.blocks(host: host, at: .now) == true { return .drop() }
         guard let host = hostname(for: flow),
-              let policy = SharedPolicySnapshot.read()?.effective(at: .now) else {
-            // No trustworthy policy snapshot: this prototype cannot promise a lock.
-            return .allow()
-        }
-        // Usage counting is not connected yet. A budgeted service must not get
-        // unlimited access merely because the counter is unavailable.
-        if policy.rules.contains(where: { $0.matches(host: host) && $0.dailySeconds != nil }) {
-            return .drop()
-        }
-        return policy.allows(host: host, at: .now) ? .allow() : .drop()
+              let book = SharedLimitStore.readBook(),
+              book.active(at: .now).contains(where: { $0.service.matches(host: host) }) else { return .allow() }
+        guard book.permits(host: host, sourceAppIdentifier: flow.sourceAppIdentifier,
+                           at: .now, usage: SharedLimitStore.readUsage()) else { return .drop() }
+        // Keep checking an already-open connection as its traffic arrives.
+        return .filterDataVerdict(withFilterInbound: true, peekInboundBytes: 1,
+                                  filterOutbound: true, peekOutboundBytes: 1)
+    }
+
+    public override func handleInboundData(from flow: NEFilterFlow, readBytesStartOffset: Int,
+                                           readBytes: Data) -> NEFilterDataVerdict {
+        verdict(for: flow, bytes: readBytes.count)
+    }
+
+    public override func handleOutboundData(from flow: NEFilterFlow, readBytesStartOffset: Int,
+                                            readBytes: Data) -> NEFilterDataVerdict {
+        verdict(for: flow, bytes: readBytes.count)
+    }
+
+    private func verdict(for flow: NEFilterFlow, bytes: Int) -> NEFilterDataVerdict {
+        guard let host = hostname(for: flow), let book = SharedLimitStore.readBook() else { return .allow() }
+        guard book.permits(host: host, sourceAppIdentifier: flow.sourceAppIdentifier,
+                           at: .now, usage: SharedLimitStore.readUsage()) else { return .drop() }
+        return NEFilterDataVerdict(passBytes: bytes, peekBytes: 1)
     }
 
     private func hostname(for flow: NEFilterFlow) -> String? {
