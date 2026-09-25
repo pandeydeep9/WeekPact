@@ -5,10 +5,11 @@ import WeekPactCore
 @main
 struct WeekPactApp: App {
     @StateObject private var model = PlannerModel()
+    @StateObject private var trial = TrialController()
 
     var body: some Scene {
         WindowGroup("WeekPact") {
-            PlannerView(model: model)
+            PlannerView(model: model, trial: trial)
                 .frame(minWidth: 820, minHeight: 680)
         }
     }
@@ -109,13 +110,30 @@ final class PlannerModel: ObservableObject {
 
 struct PlannerView: View {
     @ObservedObject var model: PlannerModel
+    @ObservedObject var trial: TrialController
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Text("WeekPact").font(.largeTitle.bold())
-                Text("Planner prototype · No network enforcement yet")
+                Text("Planning prototype · Browser trial available below · No locked enforcement yet")
                     .foregroundStyle(.orange)
+                GroupBox("Try a five-minute YouTube limit today") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        TextField("Trial instruction", text: $trial.instruction)
+                        HStack {
+                            Button("Start trial") { trial.start() }
+                                .buttonStyle(.borderedProminent)
+                            Text("\(Int(trial.remainingSeconds.rounded(.up))) seconds remaining today")
+                                .monospacedDigit()
+                        }
+                        Text(trial.status).font(.callout)
+                        Text("Chrome and Safari only. Counts foreground tab time and redirects a YouTube tab when the five minutes expire. WeekPact must stay open; this trial can be bypassed and is separate from weekly commitments.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }.padding(8)
+                }
+                Divider()
                 Text("Describe next week, then edit the exact rules before recording a plan.")
                 TextEditor(text: $model.request)
                     .frame(height: 84)
