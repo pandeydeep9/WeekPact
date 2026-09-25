@@ -1,5 +1,5 @@
 #!/bin/bash
-# WeekPact's own two-minute, system-wide hosts-file blocking spike for macOS.
+# WeekPact's own two-minute hosts-file blocking spike for macOS.
 # Installed as a root-owned launchd job so expiry is checked after a reboot.
 set -euo pipefail
 PATH=/usr/bin:/bin:/usr/sbin:/sbin
@@ -13,17 +13,26 @@ begin='# BEGIN WEEKPACT LOCAL TEST'
 end='# END WEEKPACT LOCAL TEST'
 
 if [[ $(id -u) != 0 ]]; then
-    echo 'Run with sudo: sudo bash scripts/test-weekpact-block.sh trial' >&2
+    echo 'Run with sudo: sudo bash scripts/test-weekpact-block.sh trial [youtube|example]' >&2
     exit 1
 fi
 
 refresh() {
-    local now expiry active starts ends start_line end_line temporary cleaned
+    local now expiry selected domains active starts ends start_line end_line temporary cleaned policy
     now=$(date +%s)
     active=0
     if [[ -f "$expires" ]]; then
-        expiry=$(cat "$expires")
-        if [[ "$expiry" =~ ^[0-9]+$ ]] && (( now < expiry )); then active=1; fi
+        policy=$(cat "$expires")
+        read -r expiry selected <<< "$policy"
+        selected=${selected:-example} # The original example-only test stored just a timestamp.
+        if [[ "$expiry" =~ ^[0-9]+$ ]] && (( now < expiry )); then
+            case "$selected" in
+                example) domains='example.com www.example.com' ;;
+                youtube) domains='youtube.com www.youtube.com m.youtube.com music.youtube.com youtu.be' ;;
+                *) echo 'Invalid WeekPact trial site; leaving /etc/hosts untouched.' >&2; exit 1 ;;
+            esac
+            active=1
+        fi
     fi
 
     # Leave a hosts file with an unfamiliar/malformed marker untouched.
@@ -60,8 +69,8 @@ refresh() {
     if [[ "$active" == 1 ]]; then
         {
             echo "$begin"
-            echo '0.0.0.0 example.com www.example.com'
-            echo '::1 example.com www.example.com'
+            echo "0.0.0.0 $domains"
+            echo "::1 $domains"
             echo "$end"
         } >> "$temporary"
     fi
@@ -81,12 +90,17 @@ case "${1:-}" in
         ;;
     trial)
         if [[ ! -f "$hosts" ]]; then echo '/etc/hosts was not found.' >&2; exit 1; fi
+        selected=${2:-youtube}
+        case "$selected" in
+            example|youtube) ;;
+            *) echo 'Choose example or youtube.' >&2; exit 2 ;;
+        esac
         if [[ -f "$expires" ]]; then refresh; fi
         if [[ -f "$expires" ]]; then
             echo 'A WeekPact test is already pending; wait for it to end.' >&2
             exit 1
         fi
-        echo 'WeekPact will block only example.com for two minutes using /etc/hosts.'
+        echo "WeekPact will block $selected for two minutes using /etc/hosts."
         echo 'This requires administrator access. It does not yet enforce daily limits.'
         read -r -p 'Type TEST to continue: ' answer
         if [[ "$answer" != TEST ]]; then echo 'Canceled.'; exit 0; fi
@@ -114,14 +128,16 @@ PLIST
             launchctl bootstrap system "$job"
         fi
         launchctl print system/com.weekpact.local-blocker >/dev/null
-        date -u -v+120S +%s > "$expires"
-        chown root:wheel "$expires"
-        chmod 0600 "$expires"
+        policy_file=$(mktemp "$directory/.trial-expires.XXXXXXXX")
+        printf '%s %s\n' "$(date -u -v+120S +%s)" "$selected" > "$policy_file"
+        chown root:wheel "$policy_file"
+        chmod 0600 "$policy_file"
+        mv -f "$policy_file" "$expires"
         refresh
-        echo 'Test example.com in Safari and Chrome now. It should open again in two minutes.'
+        echo "Test $selected in a fresh Safari or Chrome tab. It should open again in two minutes."
         ;;
     *)
-        echo 'Usage: sudo bash scripts/test-weekpact-block.sh trial' >&2
+        echo 'Usage: sudo bash scripts/test-weekpact-block.sh trial [youtube|example]' >&2
         exit 2
         ;;
 esac
