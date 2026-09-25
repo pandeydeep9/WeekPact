@@ -93,6 +93,7 @@ final class PlannerModel: ObservableObject {
                                                     withIntermediateDirectories: true)
             let data = try JSONEncoder().encode(updated)
             try data.write(to: fileURL, options: .atomic)
+            _ = SharedPolicySnapshot.write(updated)
             book = updated
             switch result {
             case .committed(let date):
