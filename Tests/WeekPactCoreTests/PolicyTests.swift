@@ -71,6 +71,19 @@ final class PolicyTests: XCTestCase {
         XCTAssertEqual(book.effective(at: date("2026-10-01T18:00:00Z"))?.rules[0].dailySeconds, 900)
     }
 
+    func testLaterTighteningPostponesQueuedRelaxation() throws {
+        var book = PolicyBook()
+        _ = try book.submit(policy("2026-09-28T07:00:00Z", rules: [youtube()]),
+                            now: date("2026-09-25T18:00:00Z"))
+        let relaxed = policy("2026-10-05T07:00:00Z", rules: [youtube(minutes: 60)])
+        XCTAssertEqual(try book.submit(relaxed, now: date("2026-09-30T18:00:00Z")),
+                       .scheduled(date("2026-10-12T07:00:00Z")))
+        _ = try book.submit(policy("2026-10-05T07:00:00Z", rules: [youtube(minutes: 15)]),
+                            now: date("2026-10-11T18:00:00Z"))
+        XCTAssertEqual(book.effective(at: date("2026-10-13T18:00:00Z"))?.rules[0].dailySeconds, 900)
+        XCTAssertEqual(book.effective(at: date("2026-10-20T18:00:00Z"))?.rules[0].dailySeconds, 3600)
+    }
+
     func testWeekBoundaryAcrossDaylightSavingChange() {
         let before = date("2026-11-01T08:30:00Z")
         XCTAssertEqual(WeekClock.next(after: before, timeZoneID: zone), date("2026-11-02T08:00:00Z"))
