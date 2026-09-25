@@ -25,10 +25,10 @@ In **Today**, WeekPact counts frontmost Safari/Chrome website time while its pro
 In the WeekPact directory on your Mac, run:
 
 ```sh
-sudo bash scripts/test-weekpact-block.sh trial
+sudo bash scripts/test-weekpact-block.sh trial youtube
 ```
 
-Type `TEST` when prompted. WeekPact briefly writes `example.com` into macOS `/etc/hosts` and installs its own root-owned `launchd` job to remove the entry after two minutes, including after a restart. Try fresh Safari and Chrome tabs and check that the site opens again after two minutes. This is a system-wide DNS test, **not** the finished daily-limit feature: a browser using its own DNS, a VPN, or an administrator can bypass it. We will not present a weekly lock as enforced until its full allowance and browser behavior have been tested on your Mac.
+Type `TEST` when prompted. WeekPact briefly blocks the main YouTube website names in macOS `/etc/hosts` and installs its own root-owned `launchd` job to remove the entry after two minutes, including after a restart. Try a fresh YouTube tab and check that it opens again after two minutes. To repeat the harmless test, use `trial example`. This is a system-wide DNS test, **not** the finished daily-limit feature: existing video streams, unlisted YouTube hosts, a browser using its own DNS, a VPN, or an administrator can bypass it. We will not present a weekly lock as enforced until its full allowance and browser behavior have been tested on your Mac.
 
 This is source-run code, not a finished locked-mode installer. The [original signed-filter build](docs/BUILD.md) remains available for developers who already have that capability. A user who administers this Mac can ultimately disable local protections.
 
