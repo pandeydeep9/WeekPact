@@ -1,0 +1,15 @@
+name: Swift prototype
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test policy engine
+        run: swift test
+      - name: Build Mac planner
+        run: swift build --product WeekPactApp
