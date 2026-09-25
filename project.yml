@@ -38,6 +38,7 @@ targets:
     sources: [Sources/WeekPactFilterPrototype, FilterExtension/main.swift]
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.pandeydeep9.WeekPact.Filter
+      PRODUCT_NAME: com.pandeydeep9.WeekPact.Filter
     dependencies:
       - package: WeekPact
         product: WeekPactCore
