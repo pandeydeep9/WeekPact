@@ -19,4 +19,5 @@ jobs:
         run: |
           brew install xcodegen
           xcodegen generate
-          xcodebuild -project WeekPact.xcodeproj -scheme WeekPactMac -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -project WeekPact.xcodeproj -scheme WeekPactMac -configuration Debug -destination 'platform=macOS' -derivedDataPath "$RUNNER_TEMP/WeekPactDerived" CODE_SIGNING_ALLOWED=NO build
+          test -d "$RUNNER_TEMP/WeekPactDerived/Build/Products/Debug/WeekPactMac.app/Contents/Library/SystemExtensions/com.pandeydeep9.WeekPact.Filter.systemextension"

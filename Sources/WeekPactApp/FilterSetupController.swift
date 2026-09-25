@@ -10,7 +10,7 @@ final class FilterSetupController: NSObject, ObservableObject, OSSystemExtension
     @Published private(set) var isEnabled = false
 
     private let extensionID = "com.pandeydeep9.WeekPact.Filter"
-    private let extensionName = "WeekPactFilter.systemextension"
+    private let extensionName = "com.pandeydeep9.WeekPact.Filter.systemextension"
 
     override init() {
         super.init()
